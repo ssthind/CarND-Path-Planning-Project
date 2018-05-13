@@ -68,17 +68,19 @@ the path has processed since last time.
 
 * Valid Trajectories: 
 
-** The car is able to drive at least 4.32 miles without incident: car was test for 12+ miles without any incident.
+  * The car is able to drive at least 4.32 miles without incident: car was test for 12+ miles without any incident.
 
-** The car drives according to the speed limit.: car move with speed below 50 mile/hr as through the test duration.
+  * The car drives according to the speed limit.: car move with speed below 50 mile/hr as through the test duration.
 
-** Max Acceleration and Jerk are not Exceeded.: Car does not exceed max jerk or acceleration. Tangential acceleration was set 0.1 m/s^2(=0.225 mile/hrs^2) with result in max change velocity, per tragectory waypoint generated, of 0.1*dt= 0.002 m/s, ( as dt=0.02 s). 
+  * Max Acceleration and Jerk are not Exceeded.: Car does not exceed max jerk or acceleration. Tangential acceleration was set 0.1 m/s^2(=0.225 mile/hrs^2) with result in max change velocity, per tragectory waypoint generated, of 0.1*dt= 0.002 m/s, ( as dt=0.02 s). 
 
-** Car does not have collisions.: car does not collide with other cars and maneuvers with safe distance from other cars
+  * Car does not have collisions.: car does not collide with other cars and maneuvers with safe distance from other cars
 
-** The car stays in its lane, except for the time between changing lanes.: as the out of lane warning never flashes in the simulator, during the test run.
+  * The car stays in its lane, except for the time between changing lanes.: as the out of lane warning never flashes in the simulator, during the test run.
 
-** The car is able to change lanes: car is able to change lane when other car is in front and sufficient space in one of the side lanes.
+  * The car is able to change lanes: car is able to change lane when other car is in front and sufficient space in one of the side lanes.
+  
+  ![After 1 lap](images/lane_changing_after4.38miles.JPG)
 
 
 ## Reflection
