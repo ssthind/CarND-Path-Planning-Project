@@ -60,9 +60,44 @@ the path has processed since last time.
 
 2. There will be some latency between the simulator running and the path planner returning a path, with optimized code usually its not very long maybe just 1-3 time steps. During this delay the simulator will continue using points that it was last given, because of this its a good idea to store the last points you have used so you can have a smooth transition. previous_path_x, and previous_path_y can be helpful for this transition since they show the last points given to the simulator controller with the processed points already removed. You would either return a path that extends this previous path or make sure to create a new path that has a smooth transition with this last path.
 
-## Tips
 
-A really helpful resource for doing this project and creating smooth trajectories was using http://kluge.in-chemnitz.de/opensource/spline/, the spline function is in a single hearder file is really easy to use.
+
+## Rubrics points
+
+* The code compiles correctly using Basic Build Instructions, as descibed above
+
+* Valid Trajectories: 
+
+** The car is able to drive at least 4.32 miles without incident: car was test for 12+ miles without any incident.
+
+** The car drives according to the speed limit.: car move with speed below 50 mile/hr as through the test duration.
+
+** Max Acceleration and Jerk are not Exceeded.: Car does not exceed max jerk or acceleration. Tangential acceleration was set 0.1 m/s^2(=0.225 mile/hrs^2) with result in max change velocity, per tragectory waypoint generated, of 0.1*dt= 0.002 m/s, ( as dt=0.02 s). 
+
+** Car does not have collisions.: car does not collide with other cars and maneuvers with safe distance from other cars
+
+** The car stays in its lane, except for the time between changing lanes.: as the out of lane warning never flashes in the simulator, during the test run.
+
+** The car is able to change lanes: car is able to change lane when other car is in front and sufficient space in one of the side lanes.
+
+
+## Reflection
+
+The code mainly utilizes the data provided by the simulator to generate the trajectory waypoints. High level understanding of the code involves three main modules prediction(utilizing sensor-fusion data from simulator)
+
+### Prediction and sensor-fusion data analysis [line 260 to 303](./src/main.cpp#L260)
+This part of the code, analyses the sensor data and Outputs. Which of the three lanes have other cars nearest to our test(ego) car. This is boolean output for 30 meters in front and 15 meters in rear directions for all lane. Output data of this section of the code also inculdes the velocity and fernet coordinate s-positions of the other nearest cars. 
+
+### Behavior planning[line 307 to 347](./scr/main.cpp#L307)
+This module of the code, uses the data output by previous module. To Output the next lane, our test car should choose. If the current lane has a slow moving car in front. Then other lanes(left and right or only left/right) are check for front and rear cars. And if safe space is available new lane Output is decided (by first checking left and right). But if there the no safe space, then our test car will slow down and maintain a buffer distance with the front car.
+
+### Waypoint Trajectory generation [line 349 to 465](./scr/main.cpp#L349)
+50 waypoints are sent to the simulator on every call to lambda function `h.onMessage[]()`. previous point returned by simulator, appended with the new point generated based on input lane received by previous module of code `Behavior planning`. 
+Spline [Cubic Spline interpolation implementation](http://kluge.in-chemnitz.de/opensource/spline/)  is used in this section. To generate smooth waypoint at time interval of 20ms, using 5 setup points in the car coordinate system, with y-car-coordinate expressed in terms of x-car-coordinate in spline function.
+( Note: Various other approaches such as, expressing x-global and y-coordinate in terms of s was also tried that did not yield better results.  )
+Futher x-car-coordinate is incremented by the velocity component in the direction of x-car-coordinate. y-car-coordinate is generated using the spline previously setup. Next before adding these new points to the waypoint vectors, car-coordinates are transformed to global-coordinate for the simulator as input.
+Velocity/speed is also gradually updated(if required increased/decreased) during each set of waypoint coordinated generation.
+
 
 ---
 
@@ -86,55 +121,3 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-

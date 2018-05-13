@@ -249,6 +249,7 @@ int main() {
 
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+            
             //int prev_pts = 0;
             double req_speed = 49.5;  //// velocity in mile/hour, will me converted later to meters/second
             accln_car  = 0.02* 0.1;  //// dt * accleration in meters/(second)^2
@@ -256,6 +257,7 @@ int main() {
             prev_lane = lane_no ;
             double other_cars_d, other_cars_s,other_cars_vel ;
             int other_cars_lane;
+            //// Sensor-fusion data analysis,   data format for each car is: [ id, x, y, vx, vy, s, d].
             vector<bool> check_car = {false, false, false};   //// lane: (car-y/n, distance s)
             vector<double> checked_car_vel ={70.0, 70.0, 70.0};
             double max_value= 1000000.0;
@@ -264,7 +266,6 @@ int main() {
             vector<bool> check_rear_car = {false, false, false};   //// lane: (car-y/n, distance s)
             vector<double> checked_rear_car_vel ={70.0, 70.0, 70.0};
             vector<double> checked_rear_car_s = {0.0, 0.0, 0.0};
-            //// Sensor-fusion data analysis,   data format for each car is: [ id, x, y, vx, vy, s, d].
             for (unsigned int i = 0; i < sensor_fusion.size(); i++ ) {
               other_cars_d = sensor_fusion[i][6];
               other_cars_vel = distance(0,0,sensor_fusion[i][3], sensor_fusion[i][4]);
@@ -301,8 +302,8 @@ int main() {
             
             }
             
-            double buffer_distance = 5.0 + 0.5* sqrt(pow(car_speed,2) - pow(checked_car_vel[lane_no],2));
-            double rear_car_dist = 10.0;
+            double buffer_distance = 5.0 + 0.45* sqrt(pow(car_speed,2) - pow(checked_car_vel[lane_no],2));  ////as buffer distance in terms of deviation of speed 
+            double rear_car_dist = 7.0;
             //Behaviour planning
             if (check_car[lane_no]){  /// if there is a other car in my lane i am coming closer to
               if(lane_no==0 ){ //// if my car on left most lane
@@ -311,7 +312,7 @@ int main() {
                 }
 /*                 else if((not(check_car[lane_no+2] or  check_rear_car[lane_no+2])) and ((checked_car_s[lane_no+1]-car_s)> 20) and ((car_s-checked_rear_car_s[lane_no+1])> rear_car_dist)  ) {  // choosing lane 2 as next lane
                   lane_no +=2;
-                  req_speed -=20; //// to avoid high normal accleration
+                  req_speed -=20; //// to avoid high normal accleration, by turning at slower speed, with faster decreasing speed
                   accln_car *=7;
                 } */
                 else if ((checked_car_s[lane_no]-car_s) < buffer_distance){   // vehicle is front of my and both other lanes also, reducing my speed
@@ -345,7 +346,7 @@ int main() {
             }
             //cout << "prev lane: "<< prev_lane << ", current lane: "<< lane_no  << ", req_speed: " << req_speed << endl;
                   
-
+            ///// Waypoint Trajectory generation
             int prev_pts = previous_path_x.size();
             int idx_next;
             double x_gen, y_gen;
@@ -367,7 +368,6 @@ int main() {
                     }   */
               }
               prev_theta = atan2(next_y_vals[prev_pts-1] - next_y_vals[prev_pts-2], next_x_vals[prev_pts-1] - next_x_vals[prev_pts-2]);
-              //idx_next = NextWaypoint(previous_path_x[prev_pts-1], previous_path_y[prev_pts-1], prev_theta, map_waypoints_x, map_waypoints_y);
               x_gen = next_x_vals[prev_pts-1];
               y_gen = next_y_vals[prev_pts-1];
               
@@ -378,13 +378,9 @@ int main() {
               pt_y.push_back(next_y_vals[prev_pts-2]);
               pt_x.push_back(x_gen);
               pt_y.push_back(y_gen);
-              //next_d = sd[1];
-              //vel_car = 0.02 * distance(x_gen, next_x_vals[prev_pts-2], y_gen, next_y_vals[prev_pts-2]);
             }
             else  // when not even 2 previous points are available
             {
-              //idx_next = NextWaypoint(car_x, car_y, car_yaw, map_waypoints_x, map_waypoints_y);
-              
               prev_theta = deg2rad(car_yaw);
               x_gen = car_x;
               y_gen = car_y;
@@ -445,7 +441,7 @@ int main() {
             double comp_vel = (30/sqrt(900 + pow(spln(30),2))); //   to get the component of velocity in the direction of x
             for(int i = 0; i < 50-prev_pts; i++)
             {
-              double req_speed_conv = (0.02*req_speed/2.25);
+              double req_speed_conv = (0.02*req_speed/2.25);   ////converting speed to meters/second and multplying with time internal between 2 trajectory points generation
               if (vel_car >= req_speed_conv){
                 if (fabs(vel_car - req_speed_conv ) > accln_car){
                   vel_car -= accln_car;
@@ -457,28 +453,13 @@ int main() {
               else{
                 vel_car += accln_car;
               } 
-              
-              
-              //next_s+= vel_car * sqrt(900-pow(fabs(prev_lane - lane_no),2))/30 ;
-              //dist_inc = 0.02 * vel_car ;
-              //next_s+= dist_inc;
-              //cout << "s: "<< next_s << ", vel: "<< vel_car << ", req_speed: " << req_speed_conv << endl;
-              //x_gen=spln_sx(next_s);
-              //y_gen=spln_sy(next_s);
-              //next_x_vals.push_back(x_gen);
-              //next_y_vals.push_back(y_gen);
-              
+
               car_c_x += comp_vel * vel_car; ////  the component of velocity in the direction of x
               car_c_y = spln(car_c_x);
               //cout << "car c x,y: " << car_c_x << ", " << car_c_y << endl;
               //////converting car coordinates back to global coordinates
-              //double global_x = car_c_x * cos(prev_theta) - car_c_y * sin(prev_theta) + x_gen;
-              //double global_y = car_c_x * sin(prev_theta) + car_c_y * cos(prev_theta) + y_gen;
-              
-              double global_x = car_c_x * cos(prev_theta) - car_c_y * sin(prev_theta) ;
-              double global_y = car_c_x * sin(prev_theta) + car_c_y * cos(prev_theta) ;
-              global_x += x_gen;
-              global_y += y_gen;
+              double global_x = car_c_x * cos(prev_theta) - car_c_y * sin(prev_theta) + x_gen;
+              double global_y = car_c_x * sin(prev_theta) + car_c_y * cos(prev_theta) + y_gen;
               
               next_x_vals.push_back(global_x);
               next_y_vals.push_back(global_y);
@@ -494,14 +475,7 @@ int main() {
                 cout <<"i: "<< i<< ", x,y_gen:" << next_x_vals[prev_pts+i] << ", " << next_y_vals[prev_pts+i] <<" new_s,d: " << sd[0] << ", " << sd[1] << ", vel:" <<vel_car<< endl;
               } */
               
-              //following a lane
-              //double next_s = car_s+(dist_inc*(i+1));
-              //double next_d = 6;
-              //vector<double> xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-              //next_x_vals.push_back(xy[0]);
-              //next_y_vals.push_back(xy[1]);
-              
-              // straight line motion    
+              // test straight line motion    
               //next_x_vals.push_back(car_x+(dist_inc*i)*cos(deg2rad(car_yaw)));
               //next_y_vals.push_back(car_y+(dist_inc*i)*sin(deg2rad(car_yaw)));
             }
